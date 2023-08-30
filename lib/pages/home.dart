@@ -291,9 +291,18 @@ class _MyHomePageState extends State<MyHomePage> {
                           .add('${expense.name} : ${expense.amount.toInt()}');
                     }
                   }
-                  clipboardData.add('المجموع : $expenses');
-                  clipboardData.add(
-                      'باقي : ${(totalBudget - expenses).toStringAsFixed(2)}');
+                  if (expenses % 1 != 0) {
+                    clipboardData
+                        .add('المجموع : ${expenses.toStringAsFixed(2)}');
+                  } else {
+                    clipboardData.add('المجموع : ${expenses.toInt()}');
+                  }
+                  double remaining = totalBudget - expenses;
+                  if (remaining % 1 != 0) {
+                    clipboardData.add('باقي : ${remaining.toStringAsFixed(2)}');
+                  } else {
+                    clipboardData.add('باقي : ${remaining.toInt()}');
+                  }
                   String clipboardText = clipboardData.join('\n');
 
                   Clipboard.setData(ClipboardData(text: clipboardText));
