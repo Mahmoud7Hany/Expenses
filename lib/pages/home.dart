@@ -189,30 +189,57 @@ class _MyHomePageState extends State<MyHomePage> {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: Text('تأكيد المسح'),
+                    title: Text(
+                      'تأكيد المسح',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
+                    ),
                     content: Text(
-                        'هل أنت متأكد أنك تريد مسح جميع البيانات؟ يرجى ضمان نسخ البيانات قبل المسح، حيث لا يمكن استعادة البيانات بعد عملية المسح.'),
+                      'هل أنت متأكد أنك تريد مسح جميع البيانات؟ يرجى ضمان نسخ البيانات قبل المسح، حيث لا يمكن استعادة البيانات بعد عملية المسح.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[700],
+                      ),
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () {
-                          Navigator.of(context).pop(); // إلغاء
+                          Navigator.of(context).pop(); // إغلاق حوار التأكيد
                         },
-                        child: Text('إلغاء'),
+                        child: Text(
+                          'إلغاء',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 18,
+                          ),
+                        ),
                       ),
                       TextButton(
                         onPressed: () {
                           _clearData(); // مسح البيانات
                           Navigator.of(context).pop(); // إغلاق حوار التأكيد
                         },
-                        child: Text('مسح'),
+                        child: Text(
+                          'مسح',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
+                        ),
                         style: TextButton.styleFrom(
-                          // backgroundColor: Colors.red,
+                          backgroundColor: Colors.red,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
                       ),
                     ],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
                   );
                 },
               );
