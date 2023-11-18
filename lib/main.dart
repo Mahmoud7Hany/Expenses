@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('ar', 'AE'), 
+        Locale('ar', 'AE'),
       ],
       debugShowCheckedModeBanner: false,
       home: MyHomePage(),

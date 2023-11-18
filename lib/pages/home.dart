@@ -3,28 +3,19 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../widget/AppBarWidget.dart';
-import '../widget/ElevatedButtonWidget.dart';
-import '../widget/TextFormFieldWidget.dart';
+import '../models/add_Expense.dart';
+import '../widget/appBar_widget.dart';
+import '../widget/elevated_button_widget.dart';
+import '../widget/text_formField_widget.dart';
 import 'package:flutter/services.dart';
+import '../widget/expenses_widget.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
-}
-
-class Expense {
-  final String name;
-  final double amount;
-
-  Expense(this.name, this.amount);
-
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'amount': amount,
-      };
 }
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -73,6 +64,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  // recovery data
   void _loadData() async {
     _prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -88,11 +80,13 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  //  saveData
   void _saveData() {
     _prefs.setDouble('totalBudget', totalBudget);
     _prefs.setDouble('expenses', expenses);
   }
 
+  // حفظ قائمة النفقات
   void _saveExpensesList() {
     List<String> expensesJsonList = expensesList.map((expense) {
       return jsonEncode(expense.toJson());
@@ -100,6 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _prefs.setStringList('expensesList', expensesJsonList);
   }
 
+  // Delete one from list
   void _deleteExpense(int index) {
     setState(() {
       Expense deletedExpense = expensesList.removeAt(index);
@@ -109,6 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  // Delete all data
   void _clearData() {
     setState(() {
       totalBudget = 0;
@@ -119,6 +115,17 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  // بتستخدم لتحسن اداء التطبيق
+  @override
+  void dispose() {
+    _saveData();
+    expensesController.dispose();
+    budgetController.dispose();
+    expensesNameController.dispose();
+    super.dispose();
+  }
+
+  //  Add Expense
   bool canAddExpense() {
     return expensesController.text.isNotEmpty &&
         expensesNameController.text.isNotEmpty &&
@@ -126,13 +133,93 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   SizedBox sizedBox = SizedBox(height: 10);
-  bool showDeleteIcon = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        actions: [],
+        actions: [
+          // copy List
+          IconButton(
+            onPressed: () {
+              if (expensesList.isNotEmpty) {
+                List<String> clipboardData = [];
+                for (var expense in expensesList) {
+                  if (expense.amount % 1 != 0) {
+                    clipboardData.add(
+                        '${expense.name} : ${expense.amount.toStringAsFixed(2)}');
+                  } else {
+                    clipboardData
+                        .add('${expense.name} : ${expense.amount.toInt()}');
+                  }
+                }
+                if (expenses % 1 != 0) {
+                  clipboardData.add('المجموع : ${expenses.toStringAsFixed(2)}');
+                } else {
+                  clipboardData.add('المجموع : ${expenses.toInt()}');
+                }
+                double remaining = totalBudget - expenses;
+                if (remaining % 1 != 0) {
+                  clipboardData.add('باقي : ${remaining.toStringAsFixed(2)}');
+                } else {
+                  clipboardData.add('باقي : ${remaining.toInt()}');
+                }
+                String clipboardText = clipboardData.join('\n');
+
+                Clipboard.setData(ClipboardData(text: clipboardText));
+
+                final snackBar = SnackBar(
+                  content: Text('تم نسخ البيانات إلى الحافظة'),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              } else {
+                final snackBar = SnackBar(
+                  content: Text('لا يوجد بيانات لنسخها'),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              }
+            },
+            icon: Icon(Icons.copy),
+          ),
+          sizedBox,
+          // خاص بحذف جميع البيانات
+          IconButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text('تأكيد المسح'),
+                    content: Text(
+                        'هل أنت متأكد أنك تريد مسح جميع البيانات؟ يرجى ضمان نسخ البيانات قبل المسح، حيث لا يمكن استعادة البيانات بعد عملية المسح.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // إلغاء
+                        },
+                        child: Text('إلغاء'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          _clearData(); // مسح البيانات
+                          Navigator.of(context).pop(); // إغلاق حوار التأكيد
+                        },
+                        child: Text('مسح'),
+                        style: TextButton.styleFrom(
+                          // backgroundColor: Colors.red,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            icon: Icon(Icons.delete),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -142,185 +229,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   sizedBox,
-                  Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            'إجمالي المصروفات: ${_formatAmount(expenses)}',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                          sizedBox,
-                          // ElevatedButton(
-                          //   onPressed: () {
-                          //     setState(() {
-                          //       expenses = 0;
-                          //       _saveData();
-                          //       _saveExpensesList();
-                          //     });
-                          //   },
-                          //   child: Text('مسح المصروفات'),
-                          // ),
-                        ],
-                      ),
-                    ),
+                  // إجمالي المصروفات
+                  ExpensesWidget(
+                    expenses: 'إجمالي المصروفات: ${_formatAmount(expenses)}',
                   ),
-                  Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            'الرصيد المتبقي: ${_formatAmount(totalBudget - expenses)}',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                          sizedBox,
-                          // sizedBox,
-                          // ElevatedButton(
-                          //   onPressed: () {
-                          //     setState(() {
-                          //       totalBudget = 0;
-                          //       _saveData();
-                          //       _saveExpensesList();
-                          //     });
-                          //   },
-                          //   child: Text('مسح الميزانية'),
-                          // ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(10),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          showDeleteIcon = !showDeleteIcon;
-                        });
-
-                        if (showDeleteIcon) {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: Text(
-                                  'تأكيد المسح',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.red,
-                                  ),
-                                ),
-                                content: Text(
-                                  'هل أنت متأكد أنك تريد مسح جميع البيانات؟ يرجى ضمان نسخ البيانات قبل المسح، حيث لا يمكن استعادة البيانات بعد عملية المسح.',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey[700],
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        showDeleteIcon = false;
-                                      });
-                                      Navigator.of(context)
-                                          .pop(); // إغلاق حوار التأكيد
-                                    },
-                                    child: Text(
-                                      'إلغاء',
-                                      style: TextStyle(
-                                        color: Colors.red,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      _clearData(); // مسح البيانات
-                                      setState(() {
-                                        showDeleteIcon = false;
-                                      });
-                                      Navigator.of(context)
-                                          .pop(); // إغلاق حوار التأكيد
-                                    },
-                                    child: Text(
-                                      'مسح',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                    style: TextButton.styleFrom(
-                                      backgroundColor: Colors.red,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                ),
-                              );
-                            },
-                          );
-                        }
-                      },
-                      child: Text('مسح الكل'),
-                    ),
+                  // الرصيد المتبقي
+                  ExpensesWidget(
+                    expenses:
+                        'الرصيد المتبقي: ${_formatAmount(totalBudget - expenses)}',
                   ),
                 ],
               ),
             ),
-            sizedBox,
-            //  خاص بعمليه النسخ
-            ElevatedButton(
-              onPressed: () {
-                if (expensesList.isNotEmpty) {
-                  List<String> clipboardData = [];
-                  for (var expense in expensesList) {
-                    if (expense.amount % 1 != 0) {
-                      clipboardData.add(
-                          '${expense.name} : ${expense.amount.toStringAsFixed(2)}');
-                    } else {
-                      clipboardData
-                          .add('${expense.name} : ${expense.amount.toInt()}');
-                    }
-                  }
-                  if (expenses % 1 != 0) {
-                    clipboardData
-                        .add('المجموع : ${expenses.toStringAsFixed(2)}');
-                  } else {
-                    clipboardData.add('المجموع : ${expenses.toInt()}');
-                  }
-                  double remaining = totalBudget - expenses;
-                  if (remaining % 1 != 0) {
-                    clipboardData.add('باقي : ${remaining.toStringAsFixed(2)}');
-                  } else {
-                    clipboardData.add('باقي : ${remaining.toInt()}');
-                  }
-                  String clipboardText = clipboardData.join('\n');
-
-                  Clipboard.setData(ClipboardData(text: clipboardText));
-
-                  final snackBar = SnackBar(
-                    content: Text('تم نسخ البيانات إلى الحافظة'),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                } else {
-                  final snackBar = SnackBar(
-                    content: Text('لا يوجد بيانات لنسخها'),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                }
-              },
-              child: Text('نسخ البيانات إلى الحافظة'),
-            ),
-
             sizedBox,
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -337,6 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     labelText: 'مبلغ المصروف',
                   ),
                   sizedBox,
+                  // خاص بزر اضافه مصروف
                   ElevatedButtonWidget(
                     onPressed: () {
                       if (canAddExpense()) {
@@ -375,6 +296,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     labelText: 'أدخل الرصيد الإجمالي',
                   ),
                   sizedBox,
+                  // خاص بزر تحديث الرصيد او بمعني اضافه رصيد
                   Center(
                     child: ElevatedButtonWidget(
                       onPressed: () {
@@ -417,17 +339,42 @@ class _MyHomePageState extends State<MyHomePage> {
                     color: Colors.grey,
                   ),
                 ...expensesList.map(
-                  (expense) => Card(
-                    elevation: 3,
-                    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: ListTile(
-                      title: Text(expense.name),
-                      subtitle: Text(_formatAmount(expense.amount)),
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () {
-                          _deleteExpense(expensesList.indexOf(expense));
-                        },
+                  // قابل للانزلاق اللي بيعمل تحريك للعنصر ليظهر الانزلاق Slidable
+                  (expense) => Slidable(
+                    endActionPane: ActionPane(
+                      motion: const ScrollMotion(),
+                      children: [
+                        SlidableAction(
+                          onPressed: (context) {
+                            _deleteExpense(
+                                expensesList.indexOf(expense)); // حذف العنصر
+                          },
+                          backgroundColor: Colors.blue,
+                          icon: Icons.delete,
+                          label: 'حذف',
+                        )
+                      ],
+                    ),
+                    child: Card(
+                      elevation: 2,
+                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: ListTile(
+                        // اسم العنصر اللي اتصرف
+                        title: Text(
+                          expense.name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 18,
+                          ),
+                        ),
+                        // بكام العنصر اللي اتصرف
+                        subtitle: Text(
+                          _formatAmount(expense.amount),
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -454,14 +401,5 @@ class _MyHomePageState extends State<MyHomePage> {
       // قيمة الإنفاق فارغة
       return '';
     }
-  }
-
-  @override
-  void dispose() {
-    _saveData();
-    expensesController.dispose();
-    budgetController.dispose();
-    expensesNameController.dispose();
-    super.dispose();
   }
 }
