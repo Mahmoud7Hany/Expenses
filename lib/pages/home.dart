@@ -138,114 +138,118 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
+        textAppBar: 'المصاريف',
         actions: [
-          // copy List
-          IconButton(
-            onPressed: () {
-              if (expensesList.isNotEmpty) {
-                List<String> clipboardData = [];
-                for (var expense in expensesList) {
-                  if (expense.amount % 1 != 0) {
-                    clipboardData.add(
-                        '${expense.name} : ${expense.amount.toStringAsFixed(2)}');
-                  } else {
-                    clipboardData
-                        .add('${expense.name} : ${expense.amount.toInt()}');
+          // widget اللي تحت من الشرط. في حاله لم يتم اضافه عنصر في القائيمه لو موجود عنصر يتم عرض ال widget لعمل شرط لا يظهر هذا if (expensesList.isNotEmpty)
+          if (expensesList.isNotEmpty)
+            // copy List
+            IconButton(
+              onPressed: () {
+                if (expensesList.isNotEmpty) {
+                  List<String> clipboardData = [];
+                  for (var expense in expensesList) {
+                    if (expense.amount % 1 != 0) {
+                      clipboardData.add(
+                          '${expense.name} : ${expense.amount.toStringAsFixed(2)}');
+                    } else {
+                      clipboardData
+                          .add('${expense.name} : ${expense.amount.toInt()}');
+                    }
                   }
-                }
-                if (expenses % 1 != 0) {
-                  clipboardData.add('المجموع : ${expenses.toStringAsFixed(2)}');
-                } else {
-                  clipboardData.add('المجموع : ${expenses.toInt()}');
-                }
-                double remaining = totalBudget - expenses;
-                if (remaining % 1 != 0) {
-                  clipboardData.add('باقي : ${remaining.toStringAsFixed(2)}');
-                } else {
-                  clipboardData.add('باقي : ${remaining.toInt()}');
-                }
-                String clipboardText = clipboardData.join('\n');
+                  if (expenses % 1 != 0) {
+                    clipboardData
+                        .add('المجموع : ${expenses.toStringAsFixed(2)}');
+                  } else {
+                    clipboardData.add('المجموع : ${expenses.toInt()}');
+                  }
+                  double remaining = totalBudget - expenses;
+                  if (remaining % 1 != 0) {
+                    clipboardData.add('باقي : ${remaining.toStringAsFixed(2)}');
+                  } else {
+                    clipboardData.add('باقي : ${remaining.toInt()}');
+                  }
+                  String clipboardText = clipboardData.join('\n');
 
-                Clipboard.setData(ClipboardData(text: clipboardText));
+                  Clipboard.setData(ClipboardData(text: clipboardText));
 
-                final snackBar = SnackBar(
-                  content: Text('تم نسخ البيانات إلى الحافظة'),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
-              } else {
-                final snackBar = SnackBar(
-                  content: Text('لا يوجد بيانات لنسخها'),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
-              }
-            },
-            icon: Icon(Icons.copy),
-          ),
-          sizedBox,
-          // خاص بحذف جميع البيانات
-          IconButton(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: Text(
-                      'تأكيد المسح',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red,
-                      ),
-                    ),
-                    content: Text(
-                      'هل أنت متأكد أنك تريد مسح جميع البيانات؟ يرجى ضمان نسخ البيانات قبل المسح، حيث لا يمكن استعادة البيانات بعد عملية المسح.',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop(); // إغلاق حوار التأكيد
-                        },
-                        child: Text(
-                          'إلغاء',
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          _clearData(); // مسح البيانات
-                          Navigator.of(context).pop(); // إغلاق حوار التأكيد
-                        },
-                        child: Text(
-                          'مسح',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                          ),
-                        ),
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                      ),
-                    ],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
+                  final snackBar = SnackBar(
+                    content: Text('تم نسخ البيانات إلى الحافظة'),
                   );
-                },
-              );
-            },
-            icon: Icon(Icons.delete),
-          ),
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                } else {
+                  final snackBar = SnackBar(
+                    content: Text('لا يوجد بيانات لنسخها'),
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                }
+              },
+              icon: Icon(Icons.copy),
+            ),
+          // خاص بحذف جميع البيانات
+          if (expensesList.isNotEmpty)
+            IconButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text(
+                        'تأكيد المسح',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                        ),
+                      ),
+                      content: Text(
+                        'هل أنت متأكد أنك تريد مسح جميع البيانات؟ يرجى ضمان نسخ البيانات قبل المسح، حيث لا يمكن استعادة البيانات بعد عملية المسح.',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(); // إغلاق حوار التأكيد
+                          },
+                          child: Text(
+                            'إلغاء',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            _clearData(); // مسح البيانات
+                            Navigator.of(context).pop(); // إغلاق حوار التأكيد
+                          },
+                          child: Text(
+                            'مسح',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                        ),
+                      ],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    );
+                  },
+                );
+              },
+              icon: Icon(Icons.delete, size: 26),
+            ),
         ],
       ),
       body: SingleChildScrollView(

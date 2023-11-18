@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const CustomAppBar(
+      {Key? key, required this.actions, required this.textAppBar})
+      : super(key: key);
   final List<Widget> actions; // إضافة متغير actions
-
-  const CustomAppBar({
-    Key? key,
-    required this.actions,
-  }) : super(key: key);
-
+  final String textAppBar;
   @override
   Size get preferredSize =>
       const Size.fromHeight(kToolbarHeight); // حجم الـ AppBar
@@ -15,14 +13,18 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedAppBar(
-        actions: actions); // تمرير النص والعناصر إلى AnimatedAppBar
+      actions: actions,
+      textAppBar: textAppBar,
+    ); // تمرير النص والعناصر إلى AnimatedAppBar
   }
 }
 
 class AnimatedAppBar extends StatefulWidget {
   final List<Widget> actions; // إضافة متغير actions
+  final String textAppBar;
 
-  const AnimatedAppBar({super.key, required this.actions});
+  const AnimatedAppBar(
+      {super.key, required this.actions, required this.textAppBar});
 
   @override
   _AnimatedAppBarState createState() => _AnimatedAppBarState();
@@ -52,9 +54,9 @@ class _AnimatedAppBarState extends State<AnimatedAppBar> {
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [
-              Color(0xFF6D214F), // اللون البنفسجي الداكن
-              Color(0xFF54C6D0), // اللون الأزرق الفاتح
-              Color(0xFFA73982), // اللون الوردي الداكن
+              Color(0xFF355070), // اللون البنفسجي الداكن
+              Color(0xFF6d597a), // اللون الأزرق الفاتح
+              Color(0xFFb56576), // اللون الوردي الداكن
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -74,11 +76,11 @@ class _AnimatedAppBarState extends State<AnimatedAppBar> {
           centerTitle: true,
           backgroundColor: const Color.fromARGB(0, 99, 98, 98),
           elevation: 0,
-          title: const Text(
-            'المصاريف',
+          title: Text(
+            widget.textAppBar,
             style: TextStyle(
-              color: Colors.amber,
-              fontSize: 22,
+              color: Colors.white,
+              // fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
           ),
