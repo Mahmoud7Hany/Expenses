@@ -1,5 +1,6 @@
 // ignore_for_file: unnecessary_null_comparison
 
+import 'package:calculate/widget/Home_Widget/balance_card_widget.dart';
 import 'package:calculate/widget/Basics_Widget/drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,7 +10,6 @@ import '../widget/Home_Widget/appBar_widget.dart';
 import '../widget/Home_Widget/elevated_button_widget.dart';
 import '../widget/Home_Widget/text_formField_widget.dart';
 import 'package:flutter/services.dart';
-import '../widget/Home_Widget/expenses_widget.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 // Home Page
@@ -23,6 +23,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   double totalBudget = 0;
   double expenses = 0;
+  double lastEnteredBudget = 0;
   List<Expense> expensesList = [];
   TextEditingController expensesController = TextEditingController();
   TextEditingController budgetController = TextEditingController();
@@ -72,6 +73,8 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       totalBudget = _prefs.getDouble('totalBudget') ?? 0;
       expenses = _prefs.getDouble('expenses') ?? 0;
+      lastEnteredBudget =
+          _prefs.getDouble('lastEnteredBudget') ?? 0; // تحميل القيمة المدخلة
       List<String>? expensesJsonList = _prefs.getStringList('expensesList');
       if (expensesJsonList != null) {
         expensesList = expensesJsonList.map((json) {
@@ -86,6 +89,8 @@ class _MyHomePageState extends State<MyHomePage> {
   void _saveData() {
     _prefs.setDouble('totalBudget', totalBudget);
     _prefs.setDouble('expenses', expenses);
+    _prefs.setDouble(
+        'lastEnteredBudget', lastEnteredBudget); // حفظ القيمة المدخلة
   }
 
   // حفظ قائمة النفقات
@@ -111,6 +116,8 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       totalBudget = 0;
       expenses = 0;
+      lastEnteredBudget = 0;
+
       expensesList.clear();
       _saveData();
       _saveExpensesList();
@@ -261,21 +268,21 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  sizedBox,
-                  // إجمالي المصروفات
-                  ExpensesWidget(
-                    expenses: 'إجمالي المصروفات: ${_formatAmount(expenses)}',
-                  ),
-                  // الرصيد المتبقي
-                  ExpensesWidget(
-                    expenses:
-                        'الرصيد المتبقي: ${_formatAmount(totalBudget - expenses)}',
-                  ),
-                ],
+            // بطاقه الرصيد
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: BalanceCardWidget(
+                icon: Icons.remove_red_eye,
+                hiddenIcon: Icons.remove_red_eye_outlined,
+                // الرصيد المتبقي
+                totalBalance: '${_formatAmount(totalBudget - expenses)}',
+                // الرصيد اللي اتصرف
+                expenses: '${_formatAmount(expenses)}',
+                // اجمالي الرصيد اللي تم اضافته وده بيكون في دخل و ثابت علشان تعرف انت ضفت قد ايه رصيد في اول مره
+                income: '$lastEnteredBudget جنيه',
+                totalBalanceLabel: 'إجمالي الرصيد',
+                expensesLabel: 'مصروف',
+                incomeLabel: 'دخل',
               ),
             ),
             sizedBox,
@@ -349,6 +356,8 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                             );
                           } else {
+                            lastEnteredBudget =
+                                enteredBudget; // تخزين القيمة المدخلة
                             _updateBudget(enteredBudget);
                             _saveData();
                             budgetController.clear();
