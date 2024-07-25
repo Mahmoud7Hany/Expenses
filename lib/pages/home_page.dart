@@ -1,16 +1,18 @@
 // ignore_for_file: unnecessary_null_comparison
 
+import 'package:calculate/widget/Basics_Widget/drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/add_Expense.dart';
-import '../widget/appBar_widget.dart';
-import '../widget/elevated_button_widget.dart';
-import '../widget/text_formField_widget.dart';
+import '../widget/Home_Widget/appBar_widget.dart';
+import '../widget/Home_Widget/elevated_button_widget.dart';
+import '../widget/Home_Widget/text_formField_widget.dart';
 import 'package:flutter/services.dart';
-import '../widget/expenses_widget.dart';
+import '../widget/Home_Widget/expenses_widget.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
+// Home Page
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);
 
@@ -184,6 +186,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 }
               },
               icon: Icon(Icons.copy),
+              color: Colors.amber,
             ),
           // خاص بحذف جميع البيانات
           if (expensesList.isNotEmpty)
@@ -221,6 +224,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                           ),
                         ),
+                        SizedBox(width: 20),
                         TextButton(
                           onPressed: () {
                             _clearData(); // مسح البيانات
@@ -248,10 +252,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                 );
               },
-              icon: Icon(Icons.delete, size: 26),
+              icon: Icon(Icons.delete_forever, size: 26),
+              color: Colors.red,
             ),
         ],
       ),
+      drawer: DrawerWidget(), //  DrawerWidget هنا
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -380,7 +386,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             _deleteExpense(
                                 expensesList.indexOf(expense)); // حذف العنصر
                           },
-                          backgroundColor: Colors.blue,
+                          backgroundColor: Colors.red,
                           icon: Icons.delete,
                           label: 'حذف',
                         )
