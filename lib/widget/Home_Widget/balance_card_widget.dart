@@ -66,14 +66,14 @@ class _BalanceCardWidgetState extends State<BalanceCardWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Text(
+                widget.totalBalanceLabel,
+                style: TextStyle(color: Colors.white),
+              ),
               IconButton(
                 icon: Icon(_isBalanceHidden ? widget.hiddenIcon : widget.icon,
                     color: Colors.white),
                 onPressed: _toggleBalanceVisibility,
-              ),
-              Text(
-                widget.totalBalanceLabel,
-                style: TextStyle(color: Colors.white),
               ),
             ],
           ),
