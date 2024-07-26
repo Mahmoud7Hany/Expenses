@@ -193,6 +193,10 @@ class _DebtManagementPageState extends State<DebtManagementPage> {
     });
   }
 
+  double _calculateTotalAmount() {
+    return _filteredDebts.fold(0.0, (sum, debt) => sum + debt.amount);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -308,6 +312,27 @@ class _DebtManagementPageState extends State<DebtManagementPage> {
                         child: Text(_editingIndex != null
                             ? 'تحديث الدين'
                             : 'إضافة دين'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.0),
+              Card(
+                elevation: 4.0,
+                margin: EdgeInsets.only(bottom: 16.0),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'الإجمالي:',
+                        style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '\$${_calculateTotalAmount().toStringAsFixed(2)}', // Use currency symbol or format as needed
+                        style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
