@@ -1,6 +1,4 @@
-import 'package:calculate/pages/basics_page.dart';
 import 'package:calculate/pages/debt_management_page.dart';
-import 'package:calculate/pages/expense_manager_page.dart';
 import 'package:flutter/material.dart';
 
 // هذه صفحة القائمة الجانبية التي في الصفحة الرئيسية
@@ -38,17 +36,17 @@ class DrawerWidget extends StatelessWidget {
               ),
             ),
           ),
-          ListTile(
-            leading: Icon(Icons.addchart, color: Colors.green),
-            title: Text('المصاريف الأساسية'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => BasicsPage()),
-              );
-            },
-          ),
+          // ListTile(
+          //   leading: Icon(Icons.addchart, color: Colors.green),
+          //   title: Text('المصاريف الأساسية'),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(builder: (context) => BasicsPage()),
+          //     );
+          //   },
+          // ),
           ListTile(
             leading: Icon(Icons.arrow_outward, color: Colors.green),
             title: Text('الديون'),
@@ -60,17 +58,17 @@ class DrawerWidget extends StatelessWidget {
               );
             },
           ),
-          ListTile(
-            leading: Icon(Icons.account_balance_wallet, color: Colors.green),
-            title: Text('إدارة النفقات'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ExpenseManagerPage()),
-              );
-            },
-          ),
+          // ListTile(
+          //   leading: Icon(Icons.account_balance_wallet, color: Colors.green),
+          //   title: Text('إدارة النفقات'),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(builder: (context) => ExpenseManagerPage()),
+          //     );
+          //   },
+          // ),
         ],
       ),
     );

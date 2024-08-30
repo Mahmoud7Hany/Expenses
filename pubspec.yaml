@@ -1,13 +1,11 @@
 name: calculate
 description: A new Flutter project.
 
-
 version: 1.0.1+1
 # version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.5 <4.0.0'
-
+  sdk: ">=3.0.5 <4.0.0"
 
 dependencies:
   flutter:
@@ -16,34 +14,33 @@ dependencies:
   shared_preferences: ^2.2.0 # حفظ البيانات
   clipboard: ^0.1.3 # نسخ النص
   flutter_slidable: ^3.0.1 # قابل للانزلاق
-  
+  provider: ^6.1.2 # State Management
+
 #  لي اضافه اللغه العربيه داخل التطبيق
 dev_dependencies:
   flutter_test:
     sdk: flutter
-    #   ده خاص بان التطبيق يكون عربي 
+    #   ده خاص بان التطبيق يكون عربي
   flutter_localizations: # Add this line
-    sdk: flutter         # Add this line
+    sdk: flutter # Add this line
     #  شاشة البداية
   flutter_native_splash: ^2.2.14
 flutter_native_splash:
   color: "#ffffff"
   image: assets/images/splash.png
   android_gravity: center
-  # في حاله الوضع المظلم 
+  # في حاله الوضع المظلم
   color_dark: "#202125"
   android: true
   ios: true
   # بعد كده اعمل رن للاوامر دي
-  # flutter clean 
+  # flutter clean
   # flutter pub get
   # flutter pub run flutter_native_splash:create
 
   flutter_lints: ^2.0.0
 
 flutter:
-
- 
   uses-material-design: true
 
   assets:
@@ -62,6 +59,3 @@ flutter:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/custom-fonts/#from-packages

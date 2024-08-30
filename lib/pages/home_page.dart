@@ -1,451 +1,267 @@
-// ignore_for_file: unnecessary_null_comparison
-
-import 'package:calculate/widget/Home_Widget/balance_card_widget.dart';
-import 'package:calculate/widget/Basics_Widget/drawer_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-import '../models/add_Expense.dart';
-import '../widget/Home_Widget/appBar_widget.dart';
-import '../widget/Home_Widget/elevated_button_widget.dart';
-import '../widget/Home_Widget/text_formField_widget.dart';
+import 'package:provider/provider.dart';
+import 'package:calculate/models/format_amount.dart';
+import 'package:calculate/widget/Home_Widget/balance_card_widget.dart';
+import 'package:calculate/widget/Home_Widget/drawer_widget.dart';
+import 'package:calculate/widget/Home_Widget/appBar_widget.dart';
+import 'package:calculate/widget/Home_Widget/elevated_button_widget.dart';
+import 'package:calculate/widget/Home_Widget/text_formField_widget.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import '../provider/expense_provider.dart';
 
 // Home Page
-class MyHomePage extends StatefulWidget {
+class MyHomePage extends StatelessWidget {
   const MyHomePage({Key? key}) : super(key: key);
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  double totalBudget = 0;
-  double expenses = 0;
-  double lastEnteredBudget = 0;
-  List<Expense> expensesList = [];
-  TextEditingController expensesController = TextEditingController();
-  TextEditingController budgetController = TextEditingController();
-  TextEditingController expensesNameController = TextEditingController();
-  late SharedPreferences _prefs;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
-
-  void _updateExpenses(double value) {
-    setState(() {
-      expenses = value;
-    });
-  }
-
-  void _updateBudget(double value) {
-    setState(() {
-      totalBudget += value;
-    });
-  }
-
-  void _addExpense(String name, double amount) {
-    double newTotalExpenses = expenses + amount;
-
-    if (newTotalExpenses <= totalBudget) {
-      setState(() {
-        expensesList.add(Expense(name, amount));
-        _saveExpensesList();
-        _updateExpenses(newTotalExpenses);
-        _saveData();
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('المصروفات تتجاوز الميزانية المتاحة'),
-        ),
-      );
-    }
-  }
-
-  // recovery data
-  void _loadData() async {
-    _prefs = await SharedPreferences.getInstance();
-    setState(() {
-      totalBudget = _prefs.getDouble('totalBudget') ?? 0;
-      expenses = _prefs.getDouble('expenses') ?? 0;
-      lastEnteredBudget =
-          _prefs.getDouble('lastEnteredBudget') ?? 0; // تحميل القيمة المدخلة
-      List<String>? expensesJsonList = _prefs.getStringList('expensesList');
-      if (expensesJsonList != null) {
-        expensesList = expensesJsonList.map((json) {
-          Map<String, dynamic> expenseMap = jsonDecode(json);
-          return Expense(expenseMap['name'], expenseMap['amount']);
-        }).toList();
-      }
-    });
-  }
-
-  //  saveData
-  void _saveData() {
-    _prefs.setDouble('totalBudget', totalBudget);
-    _prefs.setDouble('expenses', expenses);
-    _prefs.setDouble(
-        'lastEnteredBudget', lastEnteredBudget); // حفظ القيمة المدخلة
-  }
-
-  // حفظ قائمة النفقات
-  void _saveExpensesList() {
-    List<String> expensesJsonList = expensesList.map((expense) {
-      return jsonEncode(expense.toJson());
-    }).toList();
-    _prefs.setStringList('expensesList', expensesJsonList);
-  }
-
-  // Delete one from list
-  void _deleteExpense(int index) {
-    setState(() {
-      Expense deletedExpense = expensesList.removeAt(index);
-      _updateExpenses(expenses - deletedExpense.amount);
-      _saveExpensesList();
-      _saveData();
-    });
-  }
-
-  // Delete all data
-  void _clearData() {
-    setState(() {
-      totalBudget = 0;
-      expenses = 0;
-      lastEnteredBudget = 0;
-
-      expensesList.clear();
-      _saveData();
-      _saveExpensesList();
-    });
-  }
-
-  // بتستخدم لتحسن اداء التطبيق
-  @override
-  void dispose() {
-    _saveData();
-    expensesController.dispose();
-    budgetController.dispose();
-    expensesNameController.dispose();
-    super.dispose();
-  }
-
-  //  Add Expense
-  bool canAddExpense() {
-    return expensesController.text.isNotEmpty &&
-        expensesNameController.text.isNotEmpty &&
-        (totalBudget > 0 || budgetController.text.isNotEmpty);
-  }
-
-  SizedBox sizedBox = SizedBox(height: 10);
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        textAppBar: 'المصاريف',
-        actions: [
-          // widget اللي تحت من الشرط. في حاله لم يتم اضافه عنصر في القائيمه لو موجود عنصر يتم عرض ال widget لعمل شرط لا يظهر هذا if (expensesList.isNotEmpty)
-          if (expensesList.isNotEmpty)
-            // copy List
-            IconButton(
-              onPressed: () {
-                if (expensesList.isNotEmpty) {
-                  List<String> clipboardData = [];
-                  for (var expense in expensesList) {
-                    if (expense.amount % 1 != 0) {
-                      clipboardData.add(
-                          '${expense.name} : ${expense.amount.toStringAsFixed(2)}');
-                    } else {
-                      clipboardData
-                          .add('${expense.name} : ${expense.amount.toInt()}');
-                    }
-                  }
-                  if (expenses % 1 != 0) {
-                    clipboardData
-                        .add('المجموع : ${expenses.toStringAsFixed(2)}');
-                  } else {
-                    clipboardData.add('المجموع : ${expenses.toInt()}');
-                  }
-                  double remaining = totalBudget - expenses;
-                  if (remaining % 1 != 0) {
-                    clipboardData.add('باقي : ${remaining.toStringAsFixed(2)}');
-                  } else {
-                    clipboardData.add('باقي : ${remaining.toInt()}');
-                  }
-                  String clipboardText = clipboardData.join('\n');
+    TextEditingController expensesController = TextEditingController();
+    TextEditingController budgetController = TextEditingController();
+    TextEditingController expensesNameController = TextEditingController();
 
-                  Clipboard.setData(ClipboardData(text: clipboardText));
+    return ChangeNotifierProvider(
+      create: (_) => ExpenseProvider(),
+      child: Consumer<ExpenseProvider>(
+        builder: (context, expenseProvider, child) {
+          // متغير للتحكم في ظهور حقل الإدخال وزر التحديث
+          bool isBudgetSet = expenseProvider.totalBudget > 0;
 
-                  final snackBar = SnackBar(
-                    content: Text('تم نسخ البيانات إلى الحافظة'),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                } else {
-                  final snackBar = SnackBar(
-                    content: Text('لا يوجد بيانات لنسخها'),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                }
-              },
-              icon: Icon(Icons.copy),
-              color: Colors.amber,
-            ),
-          // خاص بحذف جميع البيانات
-          if (expensesList.isNotEmpty)
-            IconButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: Text(
-                        'تأكيد المسح',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red,
-                        ),
-                      ),
-                      content: Text(
-                        'هل أنت متأكد أنك تريد مسح جميع البيانات؟ يرجى ضمان نسخ البيانات قبل المسح، حيث لا يمكن استعادة البيانات بعد عملية المسح.',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(); // إغلاق حوار التأكيد
-                          },
-                          child: Text(
-                            'إلغاء',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 20),
-                        TextButton(
-                          onPressed: () {
-                            _clearData(); // مسح البيانات
-                            Navigator.of(context).pop(); // إغلاق حوار التأكيد
-                          },
-                          child: Text(
-                            'مسح',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                            ),
-                          ),
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                        ),
-                      ],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    );
-                  },
-                );
-              },
-              icon: Icon(Icons.delete_forever, size: 26),
-              color: Colors.red,
-            ),
-        ],
-      ),
-      drawer: DrawerWidget(), //  DrawerWidget هنا
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // بطاقه الرصيد
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: BalanceCardWidget(
-                icon: Icons.remove_red_eye,
-                hiddenIcon: Icons.remove_red_eye_outlined,
-                // الرصيد المتبقي
-                totalBalance: '${_formatAmount(totalBudget - expenses)}',
-                // الرصيد اللي اتصرف
-                expenses: '${_formatAmount(expenses)}',
-                // اجمالي الرصيد اللي تم اضافته وده بيكون في دخل و ثابت علشان تعرف انت ضفت قد ايه رصيد في اول مره
-                income: '$lastEnteredBudget جنيه',
-                totalBalanceLabel: 'إجمالي الرصيد',
-                expensesLabel: 'مصروف',
-                incomeLabel: 'دخل',
-              ),
-            ),
-            sizedBox,
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: [
-                  TextFormFieldWidget(
-                    controller: expensesNameController,
-                    labelText: 'اسم المصروف',
-                  ),
-                  sizedBox,
-                  TextFormFieldWidget(
-                    controller: expensesController,
-                    keyboardType: TextInputType.number,
-                    labelText: 'مبلغ المصروف',
-                  ),
-                  sizedBox,
-                  // خاص بزر اضافه مصروف
-                  ElevatedButtonWidget(
+          return Scaffold(
+            appBar: CustomAppBar(
+              textAppBar: 'المصاريف',
+              actions: [
+                if (expenseProvider.expensesList.isNotEmpty)
+                  IconButton(
                     onPressed: () {
-                      if (canAddExpense()) {
-                        double enteredExpenses =
-                            double.tryParse(expensesController.text) ?? 0;
+                      if (expenseProvider.expensesList.isNotEmpty) {
+                        List<String> clipboardData = [];
 
-                        if (enteredExpenses == 0) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('لا يمكن إضافة قيمة 0'),
-                            ),
-                          );
-                        } else {
-                          String enteredName = expensesNameController.text;
-                          _addExpense(enteredName, enteredExpenses);
-
-                          expensesController.clear();
-                          expensesNameController.clear();
+                        // إعداد بيانات النسخ مع التحقق من الأرقام العشرية
+                        for (var expense in expenseProvider.expensesList) {
+                          if (expense.amount % 1 != 0) {
+                            clipboardData.add(
+                                '${expense.name} : ${expense.amount.toStringAsFixed(2)}');
+                          } else {
+                            clipboardData.add(
+                                '${expense.name} : ${expense.amount.toInt()}');
+                          }
                         }
-                      } else {
+
+                        // إضافة المجموع إلى البيانات
+                        double expenses = expenseProvider.expenses;
+                        if (expenses % 1 != 0) {
+                          clipboardData
+                              .add('المجموع : ${expenses.toStringAsFixed(2)}');
+                        } else {
+                          clipboardData.add('المجموع : ${expenses.toInt()}');
+                        }
+
+                        // حساب الرصيد المتبقي وإضافته إلى البيانات
+                        double remaining =
+                            expenseProvider.totalBudget - expenses;
+                        if (remaining % 1 != 0) {
+                          clipboardData
+                              .add('باقي : ${remaining.toStringAsFixed(2)}');
+                        } else {
+                          clipboardData.add('باقي : ${remaining.toInt()}');
+                        }
+
+                        // نسخ البيانات إلى الحافظة
+                        Clipboard.setData(
+                            ClipboardData(text: clipboardData.join('\n')));
+
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(totalBudget > 0
-                                ? 'يجب ملء حقلي الإدخال أولاً'
-                                : 'يجب إدخال الرصيد أولاً'),
-                          ),
+                              content: Text('تم نسخ البيانات إلى الحافظة')),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('لا يوجد بيانات لنسخها')),
                         );
                       }
                     },
-                    buttonText: 'أضف المصروف',
+                    icon: const Icon(Icons.copy),
+                    color: Colors.amber,
                   ),
-                  sizedBox,
-                  TextFormFieldWidget(
-                    controller: budgetController,
-                    keyboardType: TextInputType.number,
-                    labelText: 'أدخل الرصيد الإجمالي',
-                  ),
-                  sizedBox,
-                  // خاص بزر تحديث الرصيد او بمعني اضافه رصيد
-                  Center(
-                    child: ElevatedButtonWidget(
-                      onPressed: () {
-                        if (budgetController.text.isNotEmpty) {
-                          double enteredBudget =
-                              double.tryParse(budgetController.text) ??
-                                  totalBudget;
-
-                          if (enteredBudget == 0) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('لا يمكن إضافة قيمة 0'),
+                if (expenseProvider.expensesList.isNotEmpty)
+                  IconButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('تأكيد المسح'),
+                            content: const Text(
+                                'هل أنت متأكد أنك تريد مسح جميع البيانات؟'),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('إلغاء',
+                                    style: TextStyle(color: Colors.red)),
                               ),
-                            );
-                          } else {
-                            lastEnteredBudget =
-                                enteredBudget; // تخزين القيمة المدخلة
-                            _updateBudget(enteredBudget);
-                            _saveData();
-                            budgetController.clear();
-                          }
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('يجب إدخال قيمة الرصيد أولاً'),
-                            ),
+                              TextButton(
+                                onPressed: () {
+                                  expenseProvider.clearData();
+                                  Navigator.of(context).pop();
+                                  // إعادة إظهار حقل الإدخال وزر التحديث
+                                  isBudgetSet = false;
+                                },
+                                child: const Text('مسح',
+                                    style: TextStyle(color: Colors.white)),
+                                style: TextButton.styleFrom(
+                                    backgroundColor: Colors.red),
+                              ),
+                            ],
                           );
-                        }
-                      },
-                      buttonText: 'تحديث الرصيد',
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.delete_forever, size: 26),
+                    color: Colors.red,
+                  ),
+              ],
+            ),
+            drawer: const DrawerWidget(),
+            body: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: BalanceCardWidget(
+                      icon: Icons.remove_red_eye,
+                      hiddenIcon: Icons.remove_red_eye_outlined,
+                      totalBalance:
+                          '${formatAmount(expenseProvider.totalBudget - expenseProvider.expenses)}',
+                      expenses: '${formatAmount(expenseProvider.expenses)}',
+                      income: '${expenseProvider.lastEnteredBudget} جنيه',
+                      totalBalanceLabel: 'إجمالي الرصيد',
+                      expensesLabel: 'مصروف',
+                      incomeLabel: 'دخل',
                     ),
                   ),
-                  sizedBox,
-                ],
-              ),
-            ),
-            Column(
-              children: [
-                if (expensesList.isNotEmpty)
-                  Divider(
-                    thickness: 1,
-                    color: Colors.grey,
-                  ),
-                ...expensesList.map(
-                  // قابل للانزلاق اللي بيعمل تحريك للعنصر ليظهر الانزلاق Slidable
-                  (expense) => Slidable(
-                    endActionPane: ActionPane(
-                      motion: const ScrollMotion(),
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
                       children: [
-                        SlidableAction(
-                          onPressed: (context) {
-                            _deleteExpense(
-                                expensesList.indexOf(expense)); // حذف العنصر
-                          },
-                          backgroundColor: Colors.red,
-                          icon: Icons.delete,
-                          label: 'حذف',
-                        )
+                        // إظهار حقل "اسم المصروف" و"مبلغ المصروف" وزر "أضف المصروف" فقط إذا تم تعيين الميزانية
+                        if (isBudgetSet) ...[
+                          TextFormFieldWidget(
+                            controller: expensesNameController,
+                            labelText: 'اسم المصروف',
+                          ),
+                          const SizedBox(height: 10),
+                          TextFormFieldWidget(
+                            controller: expensesController,
+                            keyboardType: TextInputType.number,
+                            labelText: 'مبلغ المصروف',
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButtonWidget(
+                            onPressed: () {
+                              if (expensesController.text.isNotEmpty &&
+                                  expensesNameController.text.isNotEmpty) {
+                                double amount =
+                                    double.parse(expensesController.text);
+                                String name = expensesNameController.text;
+                                expenseProvider.addExpense(name, amount);
+
+                                expensesController.clear();
+                                expensesNameController.clear();
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('يجب ملء حقلي الإدخال')),
+                                );
+                              }
+                            },
+                            buttonText: 'أضف المصروف',
+                          ),
+                          const SizedBox(height: 10),
+                        ],
+                        // إظهار حقل الإدخال وزر التحديث فقط إذا لم يتم تعيين الميزانية
+                        if (!isBudgetSet) ...[
+                          TextFormFieldWidget(
+                            controller: budgetController,
+                            keyboardType: TextInputType.number,
+                            labelText: 'أدخل الرصيد الإجمالي',
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButtonWidget(
+                            onPressed: () {
+                              if (budgetController.text.isNotEmpty) {
+                                double budget =
+                                    double.parse(budgetController.text);
+                                expenseProvider.updateBudget(budget);
+                                budgetController.clear();
+                                // إخفاء حقل الإدخال وزر التحديث بعد تعيين الميزانية
+                                isBudgetSet = true;
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content:
+                                        Text('يجب إدخال قيمة الرصيد أولاً'),
+                                  ),
+                                );
+                              }
+                            },
+                            buttonText: 'إضافة الرصيد',
+                          ),
+                        ],
+                        const SizedBox(height: 10),
                       ],
                     ),
-                    child: Card(
-                      elevation: 2,
-                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: ListTile(
-                        // اسم العنصر اللي اتصرف
-                        title: Text(
-                          expense.name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 18,
+                  ),
+                  if (expenseProvider.expensesList.isNotEmpty)
+                    const Divider(
+                      thickness: 1,
+                      color: Colors.grey,
+                    ),
+                  ...expenseProvider.expensesList.map((expense) {
+                    return Slidable(
+                      endActionPane: ActionPane(
+                        motion: const ScrollMotion(),
+                        children: [
+                          SlidableAction(
+                            onPressed: (context) {
+                              expenseProvider.deleteExpense(expenseProvider
+                                  .expensesList
+                                  .indexOf(expense));
+                            },
+                            backgroundColor: Colors.red,
+                            icon: Icons.delete,
+                            label: 'حذف',
+                          )
+                        ],
+                      ),
+                      child: Card(
+                        elevation: 2,
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: ListTile(
+                          title: Text(
+                            expense.name,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w500, fontSize: 18),
                           ),
-                        ),
-                        // بكام العنصر اللي اتصرف
-                        subtitle: Text(
-                          _formatAmount(expense.amount),
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontSize: 16,
+                          subtitle: Text(
+                            formatAmount(expense.amount),
+                            style: TextStyle(
+                                fontSize: 16, color: Colors.grey[700]),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                ),
-              ],
-            )
-          ],
-        ),
+                    );
+                  }).toList(),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
-  }
-
-// الكود ده خاص بعدم عرض القيمه العشريه لو مش موجوده لو موجوده بيتم عرضه
-  String _formatAmount(double amount) {
-    if (amount != null) {
-      if (amount % 1 == 0) {
-        // القيمة لا تحتوي على أرقام عشرية
-        return '${amount.toInt()} جنيه';
-      } else {
-        // القيمة تحتوي على أرقام عشرية
-        return '${amount.toStringAsFixed(2)} جنيه';
-      }
-    } else {
-      // قيمة الإنفاق فارغة
-      return '';
-    }
   }
 }
